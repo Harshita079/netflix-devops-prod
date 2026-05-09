@@ -1,0 +1,79 @@
+pipeline {
+
+    agent any
+
+    environment {
+        IMAGE_NAME = "netflix-clone"
+        CONTAINER_NAME = "netflix-app"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/Harshita079/netflix-devops-prod.git'
+            }
+        }
+
+        stage('Terraform Format Check') {
+            steps {
+                sh 'cd terraform && terraform fmt -check'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                sh 'cd terraform && terraform init'
+            }
+        }
+
+        stage('Terraform Validate') {
+            steps {
+                sh 'cd terraform && terraform validate'
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                sh 'cd terraform && terraform plan'
+            }
+        }
+
+        stage('Approval') {
+            steps {
+                input 'Approve Infrastructure Deployment?'
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh 'cd terraform && terraform apply -auto-approve'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME -f docker/Dockerfile .'
+            }
+        }
+
+        stage('Deploy Application') {
+            steps {
+                sh '''
+                docker rm -f $CONTAINER_NAME || true
+
+                docker run -d \
+                --name $CONTAINER_NAME \
+                -p 80:80 \
+                $IMAGE_NAME
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh 'curl localhost'
+            }
+        }
+    }
+}

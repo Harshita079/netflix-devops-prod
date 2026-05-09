@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  netflix-app:
+    image: netflix-clone
+    container_name: netflix-app
+    ports:
+      - "80:80"
