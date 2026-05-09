@@ -1,4 +1,5 @@
 module "jenkins_sg" {
+
   source = "./modules/security-group"
 
   name = "jenkins-sg"
@@ -10,6 +11,7 @@ module "jenkins_sg" {
       protocol  = "tcp"
       cidr      = "0.0.0.0/0"
     },
+
     {
       from_port = 22
       to_port   = 22
@@ -20,6 +22,7 @@ module "jenkins_sg" {
 }
 
 module "app_sg" {
+
   source = "./modules/security-group"
 
   name = "app-sg"
@@ -31,6 +34,7 @@ module "app_sg" {
       protocol  = "tcp"
       cidr      = "0.0.0.0/0"
     },
+
     {
       from_port = 22
       to_port   = 22
@@ -41,21 +45,29 @@ module "app_sg" {
 }
 
 module "jenkins_ec2" {
+
   source = "./modules/ec2"
 
   ami_id        = var.ami_id
   instance_type = var.instance_type
   key_name      = var.key_name
   sg_id         = module.jenkins_sg.sg_id
-  name          = "Jenkins-Server"
+
+  name = "Jenkins-Server"
+
+  user_data = file("${path.module}/userdata/jenkins.sh")
 }
 
 module "app_ec2" {
+
   source = "./modules/ec2"
 
   ami_id        = var.ami_id
   instance_type = var.instance_type
   key_name      = var.key_name
   sg_id         = module.app_sg.sg_id
-  name          = "Netflix-App-Server"
+
+  name = "Netflix-App-Server"
+
+  user_data = file("${path.module}/userdata/app.sh")
 }
